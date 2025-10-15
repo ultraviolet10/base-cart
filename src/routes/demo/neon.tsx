@@ -3,6 +3,60 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 
 import { getClient } from '@/db'
 
+function DBConnectionError() {
+  return (
+    <div className="text-center space-y-6">
+      <div className="flex items-center justify-center mb-4">
+        {/** biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+        <svg
+          className="w-12 h-12 text-amber-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      </div>
+      <h2 className="text-2xl font-bold mb-4">Database Connection Issue</h2>
+      <div className="text-lg mb-6">The Neon database is not connected.</div>
+      <div className="bg-black/30 p-6 rounded-lg max-w-xl mx-auto">
+        <h3 className="text-lg font-semibold mb-4">Required Steps to Fix:</h3>
+        <ul className="space-y-4 text-left list-none">
+          <li className="flex items-start">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-black font-bold mr-3 min-w-8 min-h-8">
+              1
+            </span>
+            <div>
+              Use the{' '}
+              <code className="bg-black/30 px-2 py-1 rounded">db/init.sql</code>{' '}
+              file to create the database
+            </div>
+          </li>
+          <li className="flex items-start">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-black font-bold mr-3 min-w-8 min-h-8">
+              2
+            </span>
+            <div>
+              Set the{' '}
+              <code className="bg-black/30 px-2 py-1 rounded">
+                DATABASE_URL
+              </code>{' '}
+              environment variable to the connection string of your Neon
+              database
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 const getTodos = createServerFn({
   method: 'GET',
 }).handler(async () => {
@@ -10,10 +64,12 @@ const getTodos = createServerFn({
   if (!client) {
     return undefined
   }
-  return (await client.query(`SELECT * FROM todos`)) as Array<{
-    id: number
-    title: string
-  }>
+  return await client.todo.findMany({
+    select: {
+      id: true,
+      title: true
+    }
+  })
 })
 
 const insertTodo = createServerFn({
@@ -25,7 +81,11 @@ const insertTodo = createServerFn({
     if (!client) {
       return undefined
     }
-    await client.query(`INSERT INTO todos (title) VALUES ($1)`, [data.title])
+    await client.todo.create({
+      data: {
+        title: data.title
+      }
+    })
   })
 
 export const Route = createFileRoute('/demo/neon')({
@@ -109,59 +169,6 @@ function App() {
             </form>
           </>
         )}
-      </div>
-    </div>
-  )
-}
-
-function DBConnectionError() {
-  return (
-    <div className="text-center space-y-6">
-      <div className="flex items-center justify-center mb-4">
-        <svg
-          className="w-12 h-12 text-amber-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-      </div>
-      <h2 className="text-2xl font-bold mb-4">Database Connection Issue</h2>
-      <div className="text-lg mb-6">The Neon database is not connected.</div>
-      <div className="bg-black/30 p-6 rounded-lg max-w-xl mx-auto">
-        <h3 className="text-lg font-semibold mb-4">Required Steps to Fix:</h3>
-        <ul className="space-y-4 text-left list-none">
-          <li className="flex items-start">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-black font-bold mr-3 min-w-8 min-h-8">
-              1
-            </span>
-            <div>
-              Use the{' '}
-              <code className="bg-black/30 px-2 py-1 rounded">db/init.sql</code>{' '}
-              file to create the database
-            </div>
-          </li>
-          <li className="flex items-start">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-black font-bold mr-3 min-w-8 min-h-8">
-              2
-            </span>
-            <div>
-              Set the{' '}
-              <code className="bg-black/30 px-2 py-1 rounded">
-                DATABASE_URL
-              </code>{' '}
-              environment variable to the connection string of your Neon
-              database
-            </div>
-          </li>
-        </ul>
       </div>
     </div>
   )

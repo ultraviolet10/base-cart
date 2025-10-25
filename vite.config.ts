@@ -18,6 +18,27 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
+  optimizeDeps: {
+    exclude: ["@xmtp/wasm-bindings", "@xmtp/browser-sdk"],
+    include: ["@xmtp/proto"],
+  },
+  server: {
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp", // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy#require-corp
+      "Cross-Origin-Opener-Policy": "same-origin"
+    }
+  },
+  define: {
+    global: 'globalThis', // ?
+  },
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@lib': '/src/lib',
+      '@helpers': '/src/helpers',
+      '@components': '/src/components'
+    }
+  }
 })
 
 export default config
